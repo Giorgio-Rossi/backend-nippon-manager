@@ -1,0 +1,47 @@
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: nippon-manager
+
+  datasource:
+    url: jdbc:h2:file:${user.home}/nippon-manager/data;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: true
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    default-property-inclusion: NON_NULL
+
+app:
+  jwt:
+    secret: mySecretKey123456789012345678901234567890
+    expiration: 86400000
+    refresh-expiration: 604800000
+
+logging:
+  level:
+    com.projectstarter: INFO
+    org.springframework.security: WARN

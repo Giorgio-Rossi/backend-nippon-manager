@@ -1,0 +1,74 @@
+databaseChangeLog:
+  - changeSet:
+      id: "002"
+      author: nippon-manager
+      changes:
+        - createTable:
+            tableName: atleti
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nome
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cognome
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_nascita
+                  type: DATE
+              - column:
+                  name: codice_fiscale
+                  type: VARCHAR(16)
+                  constraints:
+                    unique: true
+              - column:
+                  name: email
+                  type: VARCHAR(100)
+              - column:
+                  name: telefono
+                  type: VARCHAR(20)
+              - column:
+                  name: indirizzo
+                  type: VARCHAR(255)
+              - column:
+                  name: citta
+                  type: VARCHAR(100)
+              - column:
+                  name: data_iscrizione
+                  type: DATE
+              - column:
+                  name: tipo_certificato
+                  type: VARCHAR(50)
+              - column:
+                  name: data_rilascio_certificato
+                  type: DATE
+              - column:
+                  name: data_scadenza_certificato
+                  type: DATE
+              - column:
+                  name: attivo
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
