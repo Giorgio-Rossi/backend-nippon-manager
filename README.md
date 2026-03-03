@@ -1,246 +1,142 @@
-# Spring Boot JWT Starter
+# Nippon Manager — Backend
 
-A starter project for Spring Boot applications with JWT authentication pre-configured.
+Spring Boot REST API per la gestione di atleti e certificati medici. Funziona come applicazione desktop standalone: avvia un JAR con database H2 embedded e apre automaticamente il browser.
 
-## Features
+## Stack
 
-- ✅ Spring Boot 3.2.1
-- ✅ Spring Security with JWT
-- ✅ JPA/Hibernate with H2 database
-- ✅ Validation with Bean Validation
-- ✅ Password encoding with BCrypt
-- ✅ Refresh token support
-- ✅ Role-based authorization
-- ✅ CORS configured
-- ✅ RESTful API
+- **Java 21** / Spring Boot 3.5.4
+- **Spring Security** con autenticazione JWT stateless
+- **H2** (database file-based, persistente)
+- **Liquibase** per le migration del database
+- **Lombok** per ridurre il boilerplate
 
-## Project Structure
-
-```
-src/main/java/com/example/springjwtstarter/
-├── config/
-│   ├── SecurityConfig.java          # Spring Security configuration
-│   └── DataInitializer.java         # Test data initialization
-├── controller/
-│   ├── AuthController.java          # Authentication endpoints
-│   └── TestController.java          # Test endpoints
-├── dto/
-│   ├── Request/
-│   │   ├── LoginRequest.java        # Login DTO
-│   │   ├── RegisterRequest.java     # Registration DTO
-│   └── Response/
-│       ├── JwtResponse.java         # JWT response DTO
-│       └── ApiResponse.java         # Generic response DTO
-├── entity/
-│   └── User.java                    # User entity
-├── filter/
-│   └── JwtAuthenticationFilter.java # JWT filter
-├── repository/
-│   └── UserRepository.java          # User repository
-├── service/
-│   └── CustomUserDetailsService.java # UserDetails service
-├── util/
-│   └── JwtUtil.java                 # JWT utility
-└── StarterApplication.java          # Main class
-```
-
-## Quick Setup
-
-### 1. Clone and customize the project
-
-```bash
-git clone https://github.com/Giorgio-Rossi/spring-boot-project-starter.git
-cd spring-jwt-starter
-
-# Modify the package name and group ID in pom.xml
-# Modify the package name in all Java files
-```
-
-### 2. Configure the application
-
-Modify `src/main/resources/application.yml`:
-
-```yaml
-app:
-  jwt:
-    secret: yourCustomSecretKey123456789012345678901234567890
-    expiration: 86400000 # 24 hours
-    refresh-expiration: 604800000 # 7 days
-```
-
-### 3. Run the application
+## Avvio rapido
 
 ```bash
 mvn spring-boot:run
 ```
 
-The application will be available at: `http://localhost:8080/api`
+L'applicazione si avvia su `http://localhost:8080` e apre automaticamente il browser.
 
-## Default Users
+## Credenziali di default
 
-The system automatically creates two test users:
+| Username | Password | Ruolo |
+|----------|----------|-------|
+| `admin`  | `admin123` | ADMIN |
+| `user`   | `user123`  | USER  |
 
-- **Admin**: `admin` / `admin123` (ROLE_ADMIN)
-- **User**: `user` / `user123` (ROLE_USER)
+Le credenziali vengono create al primo avvio tramite `DataInitializer`.
+
+## Database
+
+H2 file-based, il database viene salvato in:
+
+```
+%USERPROFILE%/nippon-manager/data.mv.db
+```
+
+Le tabelle vengono gestite da Liquibase (migrations in `src/main/resources/db/changelog/`).
+
+## Struttura del progetto
+
+```
+src/main/java/com/projectstarter/starter/
+├── Config/
+│   ├── SecurityConfig.java          # Configurazione Spring Security + JWT
+│   ├── DataInitializer.java         # Creazione utenti di default
+│   ├── BrowserLauncher.java         # Apertura browser all'avvio
+│   └── FrontendController.java      # Fallback React Router → index.html
+├── Controller/
+│   ├── AuthController.java          # POST /api/auth/login, /register
+│   ├── AtletaController.java        # CRUD /api/athletes
+│   ├── UserController.java          # GET /api/users/me
+│   └── TestController.java          # Endpoint di test
+├── Dto/
+│   ├── Request/                     # LoginRequest, RegisterRequest, AtletaRequest
+│   └── Response/                    # JwtResponse, AtletaResponse, UserResponse
+├── Entity/
+│   ├── User.java                    # Utente (UserDetails), ruoli USER/ADMIN
+│   └── Atleta.java                  # Atleta con dati anagrafici e certificato medico
+├── Filter/
+│   └── JwtAuthenticationFilter.java # Validazione JWT su ogni richiesta
+├── Repository/
+│   ├── UserRepository.java
+│   └── AtletaRepository.java
+├── Service/
+│   ├── AtletaService.java           # Logica CRUD atleti + soft delete
+│   └── CustomUserDetailsService.java
+└── Util/
+    └── JwtUtil.java                 # Generazione e validazione token
+```
 
 ## API Endpoints
 
-### Authentication
+### Autenticazione
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/register` | Register new user |
-| POST | `/auth/login` | User login |
-| POST | `/auth/refresh` | Refresh token |
+| Metodo | Endpoint | Accesso | Descrizione |
+|--------|----------|---------|-------------|
+| POST | `/api/auth/login` | Pubblico | Login, restituisce JWT |
+| POST | `/api/auth/register` | Pubblico | Registrazione nuovo utente |
 
-### Test Endpoints
+### Utenti
 
-| Method | Endpoint | Authorization | Description |
-|--------|----------|---------------|-------------|
-| GET | `/test/all` | Public | Open access |
-| GET | `/test/user` | USER/ADMIN | Authenticated users only |
-| GET | `/test/admin` | ADMIN | Administrators only |
-| GET | `/test/profile` | USER/ADMIN | User profile |
+| Metodo | Endpoint | Accesso | Descrizione |
+|--------|----------|---------|-------------|
+| GET | `/api/users/me` | Autenticato | Dati utente corrente |
 
-## Usage Examples
+### Atleti
 
-### 1. Registration
+| Metodo | Endpoint | Accesso | Descrizione |
+|--------|----------|---------|-------------|
+| GET | `/api/athletes` | Autenticato | Lista atleti (filtro: `?attivo=true/false`) |
+| POST | `/api/athletes` | Autenticato | Crea nuovo atleta |
+| GET | `/api/athletes/{id}` | Autenticato | Dettaglio atleta |
+| PUT | `/api/athletes/{id}` | Autenticato | Aggiorna atleta |
+| DELETE | `/api/athletes/{id}` | Autenticato | Disattiva atleta (soft delete) |
+| PUT | `/api/athletes/{id}/activate` | Autenticato | Riattiva atleta |
+| GET | `/api/athletes/search?q=` | Autenticato | Ricerca per nome/cognome |
+| GET | `/api/athletes/expiring-certificates?days=30` | Autenticato | Certificati in scadenza |
 
-```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "newuser",
-    "email": "newuser@example.com",
-    "password": "password123"
-  }'
+### Endpoint di test
+
+| Metodo | Endpoint | Accesso |
+|--------|----------|---------|
+| GET | `/api/test/all` | Pubblico |
+| GET | `/api/test/user` | USER / ADMIN |
+| GET | `/api/test/admin` | ADMIN |
+
+## Autenticazione
+
+Tutte le richieste protette richiedono l'header:
+
+```
+Authorization: Bearer <jwt-token>
 ```
 
-### 2. Login
+Il token si ottiene dalla risposta di `POST /api/auth/login`:
 
-```bash
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "password": "admin123"
-  }'
-```
-
-Response:
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiJ9...",
-  "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
+  "token": "eyJhbGci...",
   "type": "Bearer",
-  "username": "admin"
+  "username": "admin",
+  "superuser": true
 }
 ```
 
-### 3. Authenticated Request
+## Build con frontend incluso
+
+Il frontend React viene compilato e incluso automaticamente nel JAR tramite Maven:
 
 ```bash
-curl -X GET http://localhost:8080/api/test/user \
-  -H "Authorization: Bearer <your-jwt-token>"
+mvn clean package
+java -jar target/starter-0.0.1-SNAPSHOT.jar
 ```
 
-## Customization
+Il plugin `frontend-maven-plugin` esegue `npm install && npm run build` e `maven-resources-plugin` copia il risultato in `classpath:/static/`.
 
-### 1. Change Database
+## Sicurezza
 
-To use MySQL instead of H2, modify the `pom.xml`:
-
-```xml
-<dependency>
-    <groupId>mysql</groupId>
-    <artifactId>mysql-connector-java</artifactId>
-    <scope>runtime</scope>
-</dependency>
-```
-
-And `application.yml`:
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/your_database
-    username: your_username
-    password: your_password
-  jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
-```
-
-### 2. Add New Roles
-
-Modify the `Role` enum in `User.java`:
-
-```java
-public enum Role {
-    USER, ADMIN
-}
-```
-
-### 3. Customize JWT Claims
-
-Modify `JwtUtil.java` to add custom claims:
-
-```java
-private String createToken(Map<String, Object> claims, String subject, Long expiration) {
-    claims.put("role", userRole); 
-    claims.put("customClaim", "customValue"); 
-    
-    return Jwts.builder()
-            .claims(claims)
-            .subject(subject)
-            .issuedAt(new Date(System.currentTimeMillis()))
-            .expiration(new Date(System.currentTimeMillis() + expiration))
-            .signWith(getSigningKey())
-            .compact();
-}
-```
-## Testing
-Il progetto include test unitari e di integrazione:
-
-- ✅ JUnit 5 for running test cases
-- ✅ Mockito for mocking services and dependencies
-- ✅ MockMvc for testing REST controllers
-- ✅ Security tests using @WithMockUser
-
-Esempio:
-```java
-@MockBean
-private CustomUserDetailsService userDetailsService;
-
-@WithMockUser(username = "admin", roles = {"ADMIN"})
-@Test
-void testAdminAccess() throws Exception {
-    mockMvc.perform(get("/api/test/admin"))
-           .andExpect(status().isOk());
-}
-
-```
-
-## Security
-
-- ⚠️ Always change the `jwt.secret` in production
-- ⚠️ Use HTTPS in production
-- ⚠️ Configure CORS appropriately for your domain
-- ⚠️ Consider implementing rate limiting
-- ⚠️ Implement logout with token blacklisting if needed
-
-## H2 Database Console
-
-In development, you can access the H2 console:
-- URL: `http://localhost:8080/api/h2-console`
-- JDBC URL: `jdbc:h2:mem:testdb`
-- Username: `sa`
-- Password: `password`
-
-## Contributing
-
-1. Fork the project
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a Pull Request
-
+- Cambia `app.jwt.secret` in produzione con una chiave di almeno 256 bit
+- Usa HTTPS in produzione
+- Configura CORS per il dominio di produzione in `SecurityConfig.java`
