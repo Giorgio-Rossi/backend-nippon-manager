@@ -18,6 +18,7 @@ public class AtletaResponse {
     private String indirizzo;
     private String citta;
     private LocalDate dataIscrizione;
+    private String cintura;
     private String tipoCertificato;
     private LocalDate dataRilascioCertificato;
     private LocalDate dataScadenzaCertificato;
@@ -36,6 +37,7 @@ public class AtletaResponse {
         response.setIndirizzo(atleta.getIndirizzo());
         response.setCitta(atleta.getCitta());
         response.setDataIscrizione(atleta.getDataIscrizione());
+        response.setCintura(atleta.getCintura());
         response.setTipoCertificato(atleta.getTipoCertificato());
         response.setDataRilascioCertificato(atleta.getDataRilascioCertificato());
         response.setDataScadenzaCertificato(atleta.getDataScadenzaCertificato());

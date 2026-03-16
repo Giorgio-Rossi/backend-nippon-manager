@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: "003"
+      author: nippon-manager
+      changes:
+        - addColumn:
+            tableName: atleti
+            columns:
+              - column:
+                  name: cintura
+                  type: VARCHAR(50)

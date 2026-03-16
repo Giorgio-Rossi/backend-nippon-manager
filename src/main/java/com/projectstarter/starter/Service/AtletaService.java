@@ -83,6 +83,7 @@ public class AtletaService {
         atleta.setIndirizzo(request.getIndirizzo());
         atleta.setCitta(request.getCitta());
         atleta.setDataIscrizione(request.getDataIscrizione());
+        atleta.setCintura(request.getCintura());
         atleta.setTipoCertificato(request.getTipoCertificato());
         atleta.setDataRilascioCertificato(request.getDataRilascioCertificato());
         atleta.setDataScadenzaCertificato(request.getDataScadenzaCertificato());

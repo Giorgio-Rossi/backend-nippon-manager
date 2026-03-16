@@ -46,6 +46,9 @@ public class Atleta {
     @Column(name = "data_iscrizione")
     private LocalDate dataIscrizione;
 
+    @Column(length = 50)
+    private String cintura;
+
     @Column(name = "tipo_certificato", length = 50)
     private String tipoCertificato;
 

@@ -37,6 +37,9 @@ public class AtletaRequest {
     private LocalDate dataIscrizione;
 
     @Size(max = 50)
+    private String cintura;
+
+    @Size(max = 50)
     private String tipoCertificato;
 
     private LocalDate dataRilascioCertificato;
