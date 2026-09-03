@@ -1,0 +1,155 @@
+databaseChangeLog:
+  - changeSet:
+      id: "004"
+      author: nippon-manager
+      changes:
+        - createTable:
+            tableName: corsi
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nome
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descrizione
+                  type: TEXT
+              - column:
+                  name: livello
+                  type: VARCHAR(50)
+              - column:
+                  name: istruttore
+                  type: VARCHAR(150)
+              - column:
+                  name: luogo
+                  type: VARCHAR(150)
+              - column:
+                  name: data_inizio
+                  type: DATE
+              - column:
+                  name: data_fine
+                  type: DATE
+              - column:
+                  name: quota_mensile
+                  type: DOUBLE
+              - column:
+                  name: attivo
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - createTable:
+            tableName: corsi_orari
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: corso_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_corsi_orari_corso
+                    references: corsi(id)
+                    deleteCascade: true
+              - column:
+                  name: giorno_settimana
+                  type: INT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ora_inizio
+                  type: TIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ora_fine
+                  type: TIME
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sala
+                  type: VARCHAR(150)
+
+        - createTable:
+            tableName: corsi_iscrizioni
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: corso_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_corsi_iscrizioni_corso
+                    references: corsi(id)
+                    deleteCascade: true
+              - column:
+                  name: atleta_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_corsi_iscrizioni_atleta
+                    references: atleti(id)
+              - column:
+                  name: data_iscrizione
+                  type: DATE
+              - column:
+                  name: data_disiscrizione
+                  type: DATE
+              - column:
+                  name: attivo
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note
+                  type: TEXT
+
+        - addUniqueConstraint:
+            tableName: corsi_iscrizioni
+            columnNames: corso_id, atleta_id
+            constraintName: uk_corsi_iscrizioni_corso_atleta
+
+        - createIndex:
+            tableName: corsi_orari
+            indexName: idx_corsi_orari_corso
+            columns:
+              - column:
+                  name: corso_id
+
+        - createIndex:
+            tableName: corsi_iscrizioni
+            indexName: idx_corsi_iscrizioni_atleta
+            columns:
+              - column:
+                  name: atleta_id

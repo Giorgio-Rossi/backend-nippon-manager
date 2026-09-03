@@ -5,3 +5,11 @@ databaseChangeLog:
       file: db/changelog/migrations/002_create_atleti_table.yaml
   - include:
       file: db/changelog/migrations/003_add_cintura_to_atleti.yaml
+  - include:
+      file: db/changelog/migrations/004_create_corsi_tables.yaml
+  - include:
+      file: db/changelog/migrations/005_create_presenze_tables.yaml
+  - include:
+      file: db/changelog/migrations/006_create_pagamenti_table.yaml
+  - include:
+      file: db/changelog/migrations/007_drop_unused_columns.yaml
