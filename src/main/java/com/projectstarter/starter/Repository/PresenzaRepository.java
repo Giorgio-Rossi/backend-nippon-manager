@@ -27,4 +27,15 @@ public interface PresenzaRepository extends JpaRepository<Presenza, Long> {
 
     @Query("SELECT p FROM Presenza p WHERE p.lezione.corso.id = :corsoId")
     List<Presenza> findByCorso(@Param("corsoId") Long corsoId);
+
+    /** Presenze del periodo con lezione e corso gia caricati, per le aggregazioni. */
+    @Query("SELECT p FROM Presenza p JOIN FETCH p.lezione l JOIN FETCH l.corso "
+            + "WHERE l.data BETWEEN :from AND :to")
+    List<Presenza> findPerStatistiche(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
+    @Query("SELECT p FROM Presenza p JOIN FETCH p.lezione l JOIN FETCH l.corso c "
+            + "WHERE l.data BETWEEN :from AND :to AND c.id = :corsoId")
+    List<Presenza> findPerStatistiche(@Param("from") LocalDate from,
+                                      @Param("to") LocalDate to,
+                                      @Param("corsoId") Long corsoId);
 }

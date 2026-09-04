@@ -27,4 +27,12 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long> {
 
     @Query("SELECT DISTINCT p.stagione FROM Pagamento p ORDER BY p.stagione DESC")
     List<String> findStagioni();
+
+    /** Tutti i pagamenti della stagione, tessere comprese (che non hanno corso). */
+    @Query("SELECT p FROM Pagamento p LEFT JOIN FETCH p.corso WHERE p.stagione = :stagione")
+    List<Pagamento> findPerStatistiche(@Param("stagione") String stagione);
+
+    /** Solo le voci legate al corso: le tessere non sono attribuibili a un corso. */
+    @Query("SELECT p FROM Pagamento p JOIN FETCH p.corso c WHERE p.stagione = :stagione AND c.id = :corsoId")
+    List<Pagamento> findPerStatistiche(@Param("stagione") String stagione, @Param("corsoId") Long corsoId);
 }

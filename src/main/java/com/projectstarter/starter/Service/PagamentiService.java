@@ -62,7 +62,7 @@ public class PagamentiService {
 
     public ProspettoPagamentiResponse prospetto(Long corsoId, String stagione) {
         Corso corso = getCorso(corsoId);
-        String periodo = normalizzaStagione(stagione);
+        String periodo = Stagioni.normalizza(stagione);
 
         Map<Long, ProspettoPagamentiResponse.Riga> righe = new LinkedHashMap<>();
         for (CorsoIscrizione iscrizione : iscrizioneRepository.findByCorsoIdAndAttivoTrue(corsoId)) {
@@ -137,7 +137,7 @@ public class PagamentiService {
         Pagamento esistente = trovaEsistente(
                 request.getAtletaId(),
                 request.getTipo(),
-                normalizzaStagione(request.getStagione()),
+                Stagioni.normalizza(request.getStagione()),
                 request.getTipo() == Pagamento.Tipo.TESSERA ? null : request.getCorsoId(),
                 null);
         return esistente == null ? create(request) : update(esistente.getId(), request);
@@ -155,22 +155,12 @@ public class PagamentiService {
                 .orElseThrow(() -> new EntityNotFoundException(CORSO_NOT_FOUND + id));
     }
 
-    private String normalizzaStagione(String stagione) {
-        if (stagione == null || stagione.isBlank()) {
-            return Stagioni.corrente();
-        }
-        if (!Stagioni.valida(stagione)) {
-            throw new IllegalArgumentException("Stagione non valida: attesa nel formato 2026/2027.");
-        }
-        return stagione;
-    }
-
     private void mapToEntity(Pagamento pagamento, PagamentoRequest request) {
         Atleta atleta = atletaRepository.findById(request.getAtletaId())
                 .orElseThrow(() -> new EntityNotFoundException(ATLETA_NOT_FOUND + request.getAtletaId()));
         pagamento.setAtleta(atleta);
         pagamento.setTipo(request.getTipo());
-        pagamento.setStagione(normalizzaStagione(request.getStagione()));
+        pagamento.setStagione(Stagioni.normalizza(request.getStagione()));
 
         if (request.getTipo() == Pagamento.Tipo.TESSERA) {
             // La tessera associativa e annuale e vale per l'atleta, non per il singolo corso

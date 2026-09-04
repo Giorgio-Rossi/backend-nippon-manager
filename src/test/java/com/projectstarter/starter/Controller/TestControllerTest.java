@@ -26,9 +26,9 @@ class TestControllerTest {
 
 
     @Test
-    @DisplayName("GET /test/all - should return public content")
+    @DisplayName("GET /api/test/all - should return public content")
     void testPublicAccess() throws Exception {
-        mockMvc.perform(get("/test/all"))
+        mockMvc.perform(get("/api/test/all"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Public Content"));
@@ -36,9 +36,9 @@ class TestControllerTest {
 
     @Test
     @WithMockUser(username = "user1", roles = {"USER"})
-    @DisplayName("GET /test/user - should allow USER")
+    @DisplayName("GET /api/test/user - should allow USER")
     void testUserAccessWithUserRole() throws Exception {
-        mockMvc.perform(get("/test/user"))
+        mockMvc.perform(get("/api/test/user"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("User Content"))
                 .andExpect(jsonPath("$.message").value("This endpoint is accessible to authenticated users. Welcome user1!"));
@@ -46,9 +46,9 @@ class TestControllerTest {
 
     @Test
     @WithMockUser(username = "admin1", roles = {"ADMIN"})
-    @DisplayName("GET /test/admin - should allow ADMIN")
+    @DisplayName("GET /api/test/admin - should allow ADMIN")
     void testAdminAccessWithAdminRole() throws Exception {
-        mockMvc.perform(get("/test/admin"))
+        mockMvc.perform(get("/api/test/admin"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Admin Content"))
                 .andExpect(jsonPath("$.message").value("This endpoint is accessible only to admins. Welcome admin1!"));
@@ -56,9 +56,9 @@ class TestControllerTest {
 
     @Test
     @WithMockUser(username = "user2", roles = {"USER"})
-    @DisplayName("GET /test/profile - should return user profile")
+    @DisplayName("GET /api/test/profile - should return user profile")
     void testUserProfile() throws Exception {
-        mockMvc.perform(get("/test/profile"))
+        mockMvc.perform(get("/api/test/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("user2"))
                 .andExpect(jsonPath("$.roles").isArray())

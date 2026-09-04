@@ -37,4 +37,36 @@ public final class Stagioni {
     public static boolean valida(String stagione) {
         return stagione != null && stagione.matches("\\d{4}/\\d{4}");
     }
+
+    /**
+     * La stagione indicata, o quella corrente se il parametro manca.
+     *
+     * @throws IllegalArgumentException se il formato non e "2026/2027"
+     */
+    public static String normalizza(String stagione) {
+        if (stagione == null || stagione.isBlank()) {
+            return corrente();
+        }
+        if (!valida(stagione)) {
+            throw new IllegalArgumentException("Stagione non valida: attesa nel formato 2026/2027.");
+        }
+        return stagione;
+    }
+
+    /** Primo giorno della stagione: 1 settembre del primo anno. */
+    public static LocalDate dataInizio(String stagione) {
+        return LocalDate.of(annoIniziale(stagione), MESE_INIZIO, 1);
+    }
+
+    /** Ultimo giorno della stagione: 31 agosto dell'anno successivo. */
+    public static LocalDate dataFine(String stagione) {
+        return dataInizio(stagione).plusYears(1).minusDays(1);
+    }
+
+    private static int annoIniziale(String stagione) {
+        if (!valida(stagione)) {
+            throw new IllegalArgumentException("Stagione non valida: attesa nel formato 2026/2027.");
+        }
+        return Integer.parseInt(stagione.substring(0, 4));
+    }
 }
