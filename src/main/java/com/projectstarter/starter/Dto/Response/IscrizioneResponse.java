@@ -14,6 +14,7 @@ public class IscrizioneResponse {
     private Long atletaId;
     private String nome;
     private String cognome;
+    private String nominativo;
     private String cintura;
     private LocalDate dataNascita;
     private Boolean atletaAttivo;
@@ -30,6 +31,7 @@ public class IscrizioneResponse {
         response.setAtletaId(atleta.getId());
         response.setNome(atleta.getNome());
         response.setCognome(atleta.getCognome());
+        response.setNominativo(AtletaResponse.nominativo(atleta));
         response.setCintura(atleta.getCintura());
         response.setDataNascita(atleta.getDataNascita());
         response.setAtletaAttivo(atleta.getAttivo());

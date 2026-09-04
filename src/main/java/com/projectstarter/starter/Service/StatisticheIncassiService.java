@@ -5,7 +5,9 @@ import com.projectstarter.starter.Entity.Corso;
 import com.projectstarter.starter.Entity.Pagamento;
 import com.projectstarter.starter.Repository.CorsoRepository;
 import com.projectstarter.starter.Repository.PagamentoRepository;
+import com.projectstarter.starter.Dto.Response.AtletaResponse;
 import com.projectstarter.starter.Util.Aggregazioni;
+import com.projectstarter.starter.Util.Giorni;
 import com.projectstarter.starter.Util.Stagioni;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +35,8 @@ public class StatisticheIncassiService {
     private final PagamentoRepository pagamentoRepository;
 
     private static final String CORSO_NOT_FOUND = "Corso non trovato con id: ";
-    /** Etichetta per gli incassi registrati senza metodo di pagamento. */
-    private static final String METODO_NON_SPECIFICATO = "NON_SPECIFICATO";
+    /** Ambito mostrato quando le statistiche non sono filtrate su un corso. */
+    private static final String TUTTI_I_CORSI = "Tutti i corsi";
     /** Riga delle tessere nel dettaglio per corso: non sono legate ad alcun corso. */
     private static final String ETICHETTA_TESSERE = "Tessere associative";
     private static final int MESI_STAGIONE = 12;
@@ -61,6 +63,7 @@ public class StatisticheIncassiService {
             response.setCorsoId(corso.getId());
             response.setCorsoNome(corso.getNome());
         }
+        response.setAmbito(corso == null ? TUTTI_I_CORSI : corso.getNome());
         response.setTotaleAtteso(Aggregazioni.arrotonda(atteso));
         response.setTotaleIncassato(Aggregazioni.arrotonda(incassato));
         response.setTotaleResiduo(Aggregazioni.arrotonda(atteso - incassato));
@@ -104,6 +107,7 @@ public class StatisticheIncassiService {
 
             StatisticheIncassiResponse.RigaTipo riga = new StatisticheIncassiResponse.RigaTipo();
             riga.setTipo(tipo);
+            riga.setTipoLabel(tipo.getLabel());
             riga.setAtteso(Aggregazioni.arrotonda(atteso));
             riga.setIncassato(Aggregazioni.arrotonda(incassato));
             riga.setResiduo(Aggregazioni.arrotonda(atteso - incassato));
@@ -123,7 +127,7 @@ public class StatisticheIncassiService {
                 continue;
             }
             String metodo = pagamento.getMetodo() == null
-                    ? METODO_NON_SPECIFICATO
+                    ? Pagamento.Metodo.NON_SPECIFICATO
                     : pagamento.getMetodo().name();
             perMetodo.computeIfAbsent(metodo, k -> new ContatoreIncassi()).aggiungi(importo(pagamento));
         }
@@ -132,6 +136,7 @@ public class StatisticheIncassiService {
                 .map(entry -> {
                     StatisticheIncassiResponse.RigaMetodo riga = new StatisticheIncassiResponse.RigaMetodo();
                     riga.setMetodo(entry.getKey());
+                    riga.setMetodoLabel(Pagamento.Metodo.labelDi(entry.getKey()));
                     riga.setIncassato(Aggregazioni.arrotonda(entry.getValue().incassato));
                     riga.setConteggio(entry.getValue().conteggio);
                     return riga;
@@ -197,6 +202,7 @@ public class StatisticheIncassiService {
                 .map(entry -> {
                     StatisticheIncassiResponse.PuntoMensile punto = new StatisticheIncassiResponse.PuntoMensile();
                     punto.setMese(entry.getKey().toString());
+                    punto.setMeseLabel(Giorni.meseBreve(entry.getKey()));
                     punto.setIncassato(Aggregazioni.arrotonda(entry.getValue().incassato));
                     punto.setConteggio(entry.getValue().conteggio);
                     return punto;
@@ -222,11 +228,13 @@ public class StatisticheIncassiService {
         riga.setAtletaId(pagamento.getAtleta().getId());
         riga.setNome(pagamento.getAtleta().getNome());
         riga.setCognome(pagamento.getAtleta().getCognome());
+        riga.setNominativo(AtletaResponse.nominativo(pagamento.getAtleta()));
         if (pagamento.getCorso() != null) {
             riga.setCorsoId(pagamento.getCorso().getId());
             riga.setCorsoNome(pagamento.getCorso().getNome());
         }
         riga.setTipo(pagamento.getTipo());
+        riga.setTipoLabel(pagamento.getTipo().getLabel());
         riga.setImporto(Aggregazioni.arrotonda(importo(pagamento)));
         return riga;
     }

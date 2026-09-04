@@ -2,6 +2,7 @@ package com.projectstarter.starter.Controller;
 
 import com.projectstarter.starter.Dto.Request.CorsoRequest;
 import com.projectstarter.starter.Dto.Request.IscrizioneRequest;
+import com.projectstarter.starter.Dto.Response.AtletaResponse;
 import com.projectstarter.starter.Dto.Response.CorsoResponse;
 import com.projectstarter.starter.Dto.Response.IscrizioneResponse;
 import com.projectstarter.starter.Service.CorsoService;
@@ -20,9 +21,15 @@ public class CorsoController {
 
     private final CorsoService corsoService;
 
+    /**
+     * @param q filtro su nome e luogo: la lista arriva gia ridotta, cosi il
+     *          client non filtra in memoria
+     */
     @GetMapping
-    public ResponseEntity<List<CorsoResponse>> getAll(@RequestParam(required = false) Boolean attivo) {
-        return ResponseEntity.ok(corsoService.findAll(attivo));
+    public ResponseEntity<List<CorsoResponse>> getAll(
+            @RequestParam(required = false) Boolean attivo,
+            @RequestParam(required = false) String q) {
+        return ResponseEntity.ok(corsoService.findAll(attivo, q));
     }
 
     @GetMapping("/search")
@@ -70,6 +77,14 @@ public class CorsoController {
             @PathVariable Long id,
             @RequestParam(required = false) Boolean attivo) {
         return ResponseEntity.ok(corsoService.findIscritti(id, attivo));
+    }
+
+    /** Atleti attivi non ancora iscritti: la differenza tra insiemi la fa il database. */
+    @GetMapping("/{id}/enrollable")
+    public ResponseEntity<List<AtletaResponse>> getIscrivibili(
+            @PathVariable Long id,
+            @RequestParam(required = false) String q) {
+        return ResponseEntity.ok(corsoService.findIscrivibili(id, q));
     }
 
     @PostMapping("/{id}/members")

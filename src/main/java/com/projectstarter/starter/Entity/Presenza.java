@@ -19,9 +19,31 @@ import lombok.ToString;
         uniqueConstraints = @UniqueConstraint(columnNames = {"lezione_id", "atleta_id"}))
 public class Presenza {
 
+    /**
+     * Lo stato di una cella del foglio. Una cella non compilata non ha una riga
+     * a database: e l'assenza di {@code Presenza}, non un terzo valore.
+     */
     public enum Stato {
-        PRESENTE,
-        ASSENTE
+
+        PRESENTE("Presente", "P"),
+        ASSENTE("Assente", "A");
+
+        private final String label;
+        private final String sigla;
+
+        Stato(String label, String sigla) {
+            this.label = label;
+            this.sigla = sigla;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        /** La lettera mostrata nella cella del foglio presenze. */
+        public String getSigla() {
+            return sigla;
+        }
     }
 
     @Id

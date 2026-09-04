@@ -3,6 +3,7 @@ package com.projectstarter.starter.Controller;
 import com.projectstarter.starter.Dto.Request.PagamentoRequest;
 import com.projectstarter.starter.Dto.Response.PagamentoResponse;
 import com.projectstarter.starter.Dto.Response.ProspettoPagamentiResponse;
+import com.projectstarter.starter.Dto.Response.StagioniResponse;
 import com.projectstarter.starter.Service.PagamentiService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +34,9 @@ public class PagamentiController {
         return ResponseEntity.ok(pagamentiService.findByAtleta(atletaId));
     }
 
+    /** Stagioni selezionabili e quella da preselezionare. */
     @GetMapping("/payments/seasons")
-    public ResponseEntity<List<String>> getStagioni() {
+    public ResponseEntity<StagioniResponse> getStagioni() {
         return ResponseEntity.ok(pagamentiService.stagioni());
     }
 

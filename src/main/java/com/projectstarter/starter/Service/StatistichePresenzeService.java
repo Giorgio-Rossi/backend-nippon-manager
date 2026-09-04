@@ -1,5 +1,8 @@
 package com.projectstarter.starter.Service;
 
+import com.projectstarter.starter.Dto.Request.FiltroPresenzeRequest;
+import com.projectstarter.starter.Dto.Response.AtletaResponse;
+import com.projectstarter.starter.Dto.Response.PeriodoResponse;
 import com.projectstarter.starter.Dto.Response.StatistichePresenzeResponse;
 import com.projectstarter.starter.Entity.Atleta;
 import com.projectstarter.starter.Entity.Corso;
@@ -11,7 +14,11 @@ import com.projectstarter.starter.Repository.CorsoRepository;
 import com.projectstarter.starter.Repository.LezioneRepository;
 import com.projectstarter.starter.Repository.PresenzaRepository;
 import com.projectstarter.starter.Util.Aggregazioni;
+import com.projectstarter.starter.Util.Giorni;
+import com.projectstarter.starter.Util.Periodi;
+import com.projectstarter.starter.Util.Ricerca;
 import com.projectstarter.starter.Util.Stagioni;
+import com.projectstarter.starter.Util.Statistiche;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,6 +48,8 @@ public class StatistichePresenzeService {
     private final PresenzaRepository presenzaRepository;
 
     private static final String CORSO_NOT_FOUND = "Corso non trovato con id: ";
+    /** Ambito mostrato quando le statistiche non sono filtrate su un corso. */
+    private static final String TUTTI_I_CORSI = "Tutti i corsi";
     /** Oltre questo numero di mesi l'andamento mensile diventa illeggibile. */
     private static final int MAX_MESI = 36;
 
@@ -48,10 +58,30 @@ public class StatistichePresenzeService {
      * @param stagione usata per ricavare il periodo quando from/to non sono indicati
      */
     public StatistichePresenzeResponse calcola(Long corsoId, String stagione, LocalDate from, LocalDate to) {
+        FiltroPresenzeRequest filtro = new FiltroPresenzeRequest();
+        filtro.setCorsoId(corsoId);
+        filtro.setStagione(stagione);
+        filtro.setFrom(from);
+        filtro.setTo(to);
+        return calcola(filtro);
+    }
+
+    /**
+     * Calcola le statistiche del periodo richiesto. Periodo, filtro sulla
+     * classifica e ordinamento sono risolti qui: il client mostra quello che
+     * riceve senza rifiltrare ne riordinare nulla.
+     */
+    public StatistichePresenzeResponse calcola(FiltroPresenzeRequest filtro) {
+        Long corsoId = filtro.getCorsoId();
         Corso corso = corsoId == null ? null : getCorso(corsoId);
-        LocalDate[] periodo = periodo(stagione, from, to);
-        LocalDate inizio = periodo[0];
-        LocalDate fine = periodo[1];
+
+        String stagione = Stagioni.normalizza(filtro.getStagione());
+        Periodi.Preset preset = Periodi.preset(filtro.getPeriodo(), filtro.getFrom(), filtro.getTo());
+        Periodi.Intervallo intervallo =
+                Periodi.risolvi(preset, stagione, filtro.getFrom(), filtro.getTo(), LocalDate.now());
+        LocalDate inizio = intervallo.from();
+        LocalDate fine = intervallo.to();
+        Statistiche.Ordine ordine = Statistiche.Ordine.da(filtro.getOrdine());
 
         List<Lezione> lezioni = corsoId == null
                 ? lezioneRepository.findPerStatistiche(inizio, fine)
@@ -73,10 +103,13 @@ public class StatistichePresenzeService {
         StatistichePresenzeResponse response = new StatistichePresenzeResponse();
         response.setFrom(inizio);
         response.setTo(fine);
+        response.setPeriodo(PeriodoResponse.di(preset, intervallo));
         if (corso != null) {
             response.setCorsoId(corso.getId());
             response.setCorsoNome(corso.getNome());
         }
+        response.setAmbito(corso == null ? TUTTI_I_CORSI : corso.getNome());
+        response.setStagione(stagione);
         response.setLezioniSvolte(svolte.size());
         response.setLezioniAnnullate(lezioni.size() - svolte.size());
         response.setRegistrazioni(totale.registrazioni());
@@ -90,8 +123,35 @@ public class StatistichePresenzeService {
 
         response.setAndamentoMensile(andamentoMensile(inizio, fine, svolte, presenze));
         response.setPerCorso(perCorso(svolte, presenze));
-        response.setPerAtleta(perAtleta(presenze));
+
+        List<StatistichePresenzeResponse.RigaAtleta> classifica = perAtleta(presenze);
+        response.setAtletiInClassifica(classifica.size());
+        response.setPerAtleta(ordina(filtra(classifica, filtro.getQ()), ordine));
+        response.setOrdine(ordine);
         return response;
+    }
+
+    /** Il filtro sulla classifica: cosi il client non tiene in memoria l'elenco intero. */
+    private List<StatistichePresenzeResponse.RigaAtleta> filtra(
+            List<StatistichePresenzeResponse.RigaAtleta> righe, String q) {
+        String termine = Ricerca.normalizza(q);
+        if (termine == null) {
+            return righe;
+        }
+        return righe.stream()
+                .filter(riga -> riga.getNominativo().toLowerCase().contains(termine))
+                .toList();
+    }
+
+    /** La classifica esce dal calcolo dal tasso piu alto: il verso opposto la ribalta. */
+    private List<StatistichePresenzeResponse.RigaAtleta> ordina(
+            List<StatistichePresenzeResponse.RigaAtleta> righe, Statistiche.Ordine ordine) {
+        if (ordine != Statistiche.Ordine.PEGGIORI) {
+            return righe;
+        }
+        List<StatistichePresenzeResponse.RigaAtleta> ribaltata = new ArrayList<>(righe);
+        Collections.reverse(ribaltata);
+        return List.copyOf(ribaltata);
     }
 
     // ---------- Andamento mensile ----------
@@ -118,6 +178,7 @@ public class StatistichePresenzeService {
             ContatorePresenze contatore = entry.getValue();
             StatistichePresenzeResponse.PuntoMensile punto = new StatistichePresenzeResponse.PuntoMensile();
             punto.setMese(entry.getKey().toString());
+            punto.setMeseLabel(Giorni.meseBreve(entry.getKey()));
             punto.setLezioniSvolte(contatore.lezioni);
             punto.setPresenti(contatore.presenti);
             punto.setAssenti(contatore.assenti);
@@ -193,8 +254,10 @@ public class StatistichePresenzeService {
         riga.setAtletaId(contatore.atleta.getId());
         riga.setNome(contatore.atleta.getNome());
         riga.setCognome(contatore.atleta.getCognome());
+        riga.setNominativo(AtletaResponse.nominativo(contatore.atleta));
         riga.setPresenti(conteggio.presenti);
         riga.setAssenti(conteggio.assenti);
+        riga.setRegistrazioni(conteggio.registrazioni());
         riga.setTassoPresenza(Aggregazioni.percentuale(conteggio.presenti, conteggio.registrazioni()));
         return riga;
     }
@@ -204,17 +267,6 @@ public class StatistichePresenzeService {
     private Corso getCorso(Long id) {
         return corsoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(CORSO_NOT_FOUND + id));
-    }
-
-    /** from/to hanno la precedenza; in mancanza si usa l'intera stagione. */
-    private LocalDate[] periodo(String stagione, LocalDate from, LocalDate to) {
-        String riferimento = Stagioni.normalizza(stagione);
-        LocalDate inizio = from != null ? from : Stagioni.dataInizio(riferimento);
-        LocalDate fine = to != null ? to : Stagioni.dataFine(riferimento);
-        if (fine.isBefore(inizio)) {
-            throw new IllegalArgumentException("La data di fine deve essere successiva a quella di inizio.");
-        }
-        return new LocalDate[]{inizio, fine};
     }
 
     /** La GROUP BY garantisce una riga per corso, quindi nessuna chiave duplicata. */

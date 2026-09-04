@@ -8,7 +8,8 @@ import java.util.List;
 /**
  * Statistiche degli incassi di una stagione, ricavate dallo storico pagamenti.
  * "Atteso" e la somma degli importi registrati, "incassato" la sola parte con
- * una data di pagamento valorizzata.
+ * una data di pagamento valorizzata. Le etichette di tipi, metodi e mesi
+ * arrivano gia risolte: il client non tiene mappe di enum proprie.
  */
 @Data
 public class StatisticheIncassiResponse {
@@ -17,6 +18,8 @@ public class StatisticheIncassiResponse {
     /** Nullo quando le statistiche coprono tutti i corsi (tessere comprese). */
     private Long corsoId;
     private String corsoNome;
+    /** Titolo dell'ambito: il nome del corso, oppure "Tutti i corsi". */
+    private String ambito;
 
     private double totaleAtteso;
     private double totaleIncassato;
@@ -39,6 +42,7 @@ public class StatisticheIncassiResponse {
     @Data
     public static class RigaTipo {
         private Pagamento.Tipo tipo;
+        private String tipoLabel;
         private double atteso;
         private double incassato;
         private double residuo;
@@ -50,6 +54,7 @@ public class StatisticheIncassiResponse {
     public static class RigaMetodo {
         /** Nome dell'enum, oppure "NON_SPECIFICATO" per gli incassi senza metodo. */
         private String metodo;
+        private String metodoLabel;
         private double incassato;
         private long conteggio;
     }
@@ -68,6 +73,8 @@ public class StatisticheIncassiResponse {
     public static class PuntoMensile {
         /** Formato "2026-09", basato sulla data di pagamento. */
         private String mese;
+        /** "set 26": etichetta dell'asse. */
+        private String meseLabel;
         private double incassato;
         private long conteggio;
     }
@@ -78,9 +85,11 @@ public class StatisticheIncassiResponse {
         private Long atletaId;
         private String nome;
         private String cognome;
+        private String nominativo;
         private Long corsoId;
         private String corsoNome;
         private Pagamento.Tipo tipo;
+        private String tipoLabel;
         private double importo;
     }
 }

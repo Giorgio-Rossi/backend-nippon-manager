@@ -88,7 +88,7 @@ src/main/java/com/projectstarter/starter/
 
 | Metodo | Endpoint | Accesso | Descrizione |
 |--------|----------|---------|-------------|
-| GET | `/api/athletes` | Autenticato | Lista atleti (filtro: `?attivo=true/false`) |
+| GET | `/api/athletes` | Autenticato | Lista atleti, filtrata e ordinata (`?attivo=true/false`, `?q=` su nominativo e codice fiscale) |
 | POST | `/api/athletes` | Autenticato | Crea nuovo atleta |
 | GET | `/api/athletes/{id}` | Autenticato | Dettaglio atleta |
 | PUT | `/api/athletes/{id}` | Autenticato | Aggiorna atleta |
@@ -96,6 +96,37 @@ src/main/java/com/projectstarter/starter/
 | PUT | `/api/athletes/{id}/activate` | Autenticato | Riattiva atleta |
 | GET | `/api/athletes/search?q=` | Autenticato | Ricerca per nome/cognome |
 | GET | `/api/athletes/expiring-certificates?days=30` | Autenticato | Certificati in scadenza |
+
+### Riepilogo e dati di riferimento
+
+| Metodo | Endpoint | Accesso | Descrizione |
+|--------|----------|---------|-------------|
+| GET | `/api/dashboard` | Autenticato | Conteggi della home e certificati in scadenza (`?giorni=30`) |
+| GET | `/api/reference` | Autenticato | Giorni, tipi e metodi di pagamento, stati presenza, periodi e ordinamenti, con le etichette |
+
+### Corsi, presenze, pagamenti, statistiche
+
+| Metodo | Endpoint | Descrizione |
+|--------|----------|-------------|
+| GET | `/api/courses` | Lista corsi (`?attivo=`, `?q=` su nome e luogo) |
+| GET | `/api/courses/{id}/enrollable` | Atleti attivi non ancora iscritti (`?q=`) |
+| GET | `/api/courses/{id}/attendance` | Foglio presenze del mese (`?mese=2026-09`), gia impaginato con totali |
+| POST | `/api/courses/{id}/lessons/generate` | Genera le lezioni di un mese (`{ "mese": "2026-09" }`) |
+| GET | `/api/courses/{id}/payments` | Prospetto pagamenti (`?stagione=2026/2027`): colonne, celle e riepilogo |
+| GET | `/api/payments/seasons` | `{ stagioni, corrente }` |
+| GET | `/api/stats/attendance` | Presenze (`?periodo=STAGIONE\|MESE_CORRENTE\|ULTIMI_30\|ULTIMI_90\|PERSONALIZZATO`, `?q=`, `?ordine=`) |
+| GET | `/api/stats/revenue` | Incassi della stagione (`?corsoId=`, `?stagione=`) |
+
+### Divisione delle responsabilita
+
+Il calcolo e la manipolazione dei dati stanno tutti qui. Le risposte arrivano al
+client gia impaginate: filtri e ordinamenti li applica il database, aggregazioni
+e stati derivati li calcolano i service, e le etichette di dominio (giorni,
+quote, stati di una cella o di un certificato) viaggiano accanto ai valori.
+
+Il client si limita a mostrare quello che riceve. Restano fuori da questa regola
+solo due cose, che dipendono da chi guarda la pagina e non dal dominio: la resa
+locale it-IT dei numeri e delle date, e i colori dei grafici.
 
 ### Endpoint di test
 

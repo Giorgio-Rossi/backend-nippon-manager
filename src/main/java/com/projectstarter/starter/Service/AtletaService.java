@@ -4,6 +4,7 @@ import com.projectstarter.starter.Dto.Request.AtletaRequest;
 import com.projectstarter.starter.Dto.Response.AtletaResponse;
 import com.projectstarter.starter.Entity.Atleta;
 import com.projectstarter.starter.Repository.AtletaRepository;
+import com.projectstarter.starter.Util.Ricerca;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,16 +19,15 @@ public class AtletaService {
     private final AtletaRepository atletaRepository;
 
     private final static String ATHLET_NOT_FOUND = "Atleta non trovato con id: ";
-    public List<AtletaResponse> findAll(Boolean attivo) {
-        List<Atleta> atleti;
-        if (attivo == null) {
-            atleti = atletaRepository.findAll();
-        } else if (attivo) {
-            atleti = atletaRepository.findByAttivoTrue();
-        } else {
-            atleti = atletaRepository.findByAttivoFalse();
-        }
-        return atleti.stream().map(AtletaResponse::from).toList();
+
+    /**
+     * Elenco gia filtrato e ordinato dal database.
+     *
+     * @param attivo nullo per non filtrare sullo stato
+     * @param q      termine di ricerca su nominativo e codice fiscale, nullo per non filtrare
+     */
+    public List<AtletaResponse> findAll(Boolean attivo, String q) {
+        return mappa(atletaRepository.cerca(attivo, Ricerca.normalizza(q)));
     }
 
     public AtletaResponse findById(Long id) {
@@ -37,14 +37,29 @@ public class AtletaService {
     }
 
     public List<AtletaResponse> search(String q) {
-        return atletaRepository.findByNomeContainingIgnoreCaseOrCognomeContainingIgnoreCase(q, q)
-                .stream().map(AtletaResponse::from).toList();
+        return findAll(null, q);
     }
 
+    /** Atleti attivi non ancora iscritti al corso, per la modale di associazione. */
+    public List<AtletaResponse> findIscrivibili(Long corsoId, String q) {
+        return mappa(atletaRepository.findIscrivibili(corsoId, Ricerca.normalizza(q)));
+    }
+
+    /** Certificati gia scaduti o in scadenza entro {@code daysAhead} giorni. */
     public List<AtletaResponse> findExpiringCertificates(int daysAhead) {
-        LocalDate threshold = LocalDate.now().plusDays(daysAhead);
-        return atletaRepository.findByDataScadenzaCertificatoBefore(threshold)
-                .stream().map(AtletaResponse::from).toList();
+        return findExpiringCertificates(daysAhead, false);
+    }
+
+    public List<AtletaResponse> findExpiringCertificates(int daysAhead, boolean soloAttivi) {
+        LocalDate oggi = LocalDate.now();
+        return atletaRepository.findCertificatiInScadenza(oggi.plusDays(daysAhead), soloAttivi)
+                .stream().map(atleta -> AtletaResponse.from(atleta, oggi)).toList();
+    }
+
+    /** Una sola data di riferimento per tutta la lista: righe coerenti tra loro. */
+    private List<AtletaResponse> mappa(List<Atleta> atleti) {
+        LocalDate oggi = LocalDate.now();
+        return atleti.stream().map(atleta -> AtletaResponse.from(atleta, oggi)).toList();
     }
 
     public AtletaResponse create(AtletaRequest request) {

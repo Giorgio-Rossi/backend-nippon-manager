@@ -10,6 +10,7 @@ import lombok.ToString;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Una voce dello storico pagamenti. Nella stagione sportiva ogni atleta ha
@@ -22,18 +23,74 @@ import java.time.LocalDateTime;
 @Table(name = "pagamenti")
 public class Pagamento {
 
+    /**
+     * Le colonne del prospetto pagamenti. L'etichetta sta qui e non nel client
+     * perche descrive il dominio: rinominare una quota resta una decisione sola.
+     */
     public enum Tipo {
+
         /** Tessera associativa annuale: una per atleta e stagione, non legata al corso. */
-        TESSERA,
-        RATA_1,
-        RATA_2,
-        ALTRO
+        TESSERA("Tessera associativa", "Tessera", true),
+        RATA_1("1ª rata", "1ª rata", false),
+        RATA_2("2ª rata", "2ª rata", false),
+        /** Voce libera fuori dal prospetto: puo ripetersi nella stessa stagione. */
+        ALTRO("Altro", "Altro", false);
+
+        private final String label;
+        private final String breve;
+        private final boolean annuale;
+
+        Tipo(String label, String breve, boolean annuale) {
+            this.label = label;
+            this.breve = breve;
+            this.annuale = annuale;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public String getBreve() {
+            return breve;
+        }
+
+        /** true se la quota vale per l'atleta e non per il singolo corso. */
+        public boolean isAnnuale() {
+            return annuale;
+        }
+
+        /** Le colonne del prospetto, nell'ordine in cui vanno mostrate. */
+        public static List<Tipo> colonneProspetto() {
+            return List.of(TESSERA, RATA_1, RATA_2);
+        }
     }
 
     public enum Metodo {
-        CONTANTI,
-        BONIFICO,
-        ALTRO
+
+        CONTANTI("Contanti"),
+        BONIFICO("Bonifico"),
+        ALTRO("Altro");
+
+        /** Chiave con cui le statistiche raggruppano gli incassi registrati senza metodo. */
+        public static final String NON_SPECIFICATO = "NON_SPECIFICATO";
+        private static final String LABEL_NON_SPECIFICATO = "Non specificato";
+
+        private final String label;
+
+        Metodo(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        /** Etichetta a partire dal nome dell'enum, {@link #NON_SPECIFICATO} compreso. */
+        public static String labelDi(String nome) {
+            return nome == null || NON_SPECIFICATO.equals(nome)
+                    ? LABEL_NON_SPECIFICATO
+                    : valueOf(nome).getLabel();
+        }
     }
 
     @Id

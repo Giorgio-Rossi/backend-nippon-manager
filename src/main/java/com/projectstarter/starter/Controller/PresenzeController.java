@@ -4,6 +4,7 @@ import com.projectstarter.starter.Dto.Request.GeneraLezioniRequest;
 import com.projectstarter.starter.Dto.Request.LezioneRequest;
 import com.projectstarter.starter.Dto.Request.PresenzeBulkRequest;
 import com.projectstarter.starter.Dto.Response.FoglioPresenzeResponse;
+import com.projectstarter.starter.Dto.Response.GenerazioneLezioniResponse;
 import com.projectstarter.starter.Dto.Response.LezioneResponse;
 import com.projectstarter.starter.Dto.Response.PresenzaResponse;
 import com.projectstarter.starter.Service.PresenzeService;
@@ -35,7 +36,7 @@ public class PresenzeController {
     }
 
     @PostMapping("/courses/{corsoId}/lessons/generate")
-    public ResponseEntity<List<LezioneResponse>> generaLezioni(
+    public ResponseEntity<GenerazioneLezioniResponse> generaLezioni(
             @PathVariable Long corsoId,
             @Valid @RequestBody GeneraLezioniRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(presenzeService.generaLezioni(corsoId, request));
@@ -68,12 +69,17 @@ public class PresenzeController {
         return ResponseEntity.ok(presenzeService.findPresenzeLezione(lezioneId));
     }
 
+    /**
+     * Il foglio di un mese ({@code mese=2026-09}). Restano accettati
+     * {@code from}/{@code to} per interrogare un periodo qualsiasi.
+     */
     @GetMapping("/courses/{corsoId}/attendance")
     public ResponseEntity<FoglioPresenzeResponse> getFoglio(
             @PathVariable Long corsoId,
+            @RequestParam(required = false) String mese,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ResponseEntity.ok(presenzeService.foglio(corsoId, from, to));
+        return ResponseEntity.ok(presenzeService.foglio(corsoId, mese, from, to));
     }
 
     @PutMapping("/courses/{corsoId}/attendance")

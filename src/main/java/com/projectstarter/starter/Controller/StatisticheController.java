@@ -1,18 +1,17 @@
 package com.projectstarter.starter.Controller;
 
+import com.projectstarter.starter.Dto.Request.FiltroPresenzeRequest;
 import com.projectstarter.starter.Dto.Response.StatisticheIncassiResponse;
 import com.projectstarter.starter.Dto.Response.StatistichePresenzeResponse;
 import com.projectstarter.starter.Service.StatisticheIncassiService;
 import com.projectstarter.starter.Service.StatistichePresenzeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/stats")
@@ -23,16 +22,14 @@ public class StatisticheController {
     private final StatisticheIncassiService incassiService;
 
     /**
-     * Statistiche presenze. Senza {@code from}/{@code to} copre l'intera stagione;
-     * senza {@code corsoId} aggrega tutti i corsi.
+     * Statistiche presenze. Il periodo si indica con {@code periodo} (un preset
+     * come {@code ULTIMI_30}) oppure con {@code from}/{@code to}; senza nessuno
+     * dei due copre l'intera stagione. {@code q} e {@code ordine} filtrano e
+     * ordinano la classifica atleti lato server.
      */
     @GetMapping("/attendance")
-    public ResponseEntity<StatistichePresenzeResponse> presenze(
-            @RequestParam(required = false) Long corsoId,
-            @RequestParam(required = false) String stagione,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return ResponseEntity.ok(presenzeService.calcola(corsoId, stagione, from, to));
+    public ResponseEntity<StatistichePresenzeResponse> presenze(@ModelAttribute FiltroPresenzeRequest filtro) {
+        return ResponseEntity.ok(presenzeService.calcola(filtro));
     }
 
     /**
