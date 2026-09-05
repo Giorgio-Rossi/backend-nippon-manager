@@ -13,3 +13,5 @@ databaseChangeLog:
       file: db/changelog/migrations/006_create_pagamenti_table.yaml
   - include:
       file: db/changelog/migrations/007_drop_unused_columns.yaml
+  - include:
+      file: db/changelog/migrations/008_import_tesserati_25_26.yaml

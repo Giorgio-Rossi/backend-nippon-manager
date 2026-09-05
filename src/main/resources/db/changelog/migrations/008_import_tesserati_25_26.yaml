@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: "008"
+      author: nippon-manager
+      comment: Anagrafiche atleti dai tesserati FIJLKAM della stagione 2025/26.
+      changes:
+        - sqlFile:
+            path: 008_import_tesserati_25_26.sql
+            relativeToChangelogFile: true
+            encoding: UTF-8
+            splitStatements: true
+            endDelimiter: ;
+      rollback:
+        - delete:
+            tableName: atleti
+            where: "note LIKE 'Tesseramento FIJLKAM 25/26 %'"
