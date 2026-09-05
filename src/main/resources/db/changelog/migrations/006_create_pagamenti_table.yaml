@@ -1,0 +1,95 @@
+databaseChangeLog:
+  - changeSet:
+      id: "006"
+      author: nippon-manager
+      changes:
+        # Importi suggeriti per precompilare il prospetto pagamenti
+        - addColumn:
+            tableName: corsi
+            columns:
+              - column:
+                  name: quota_tessera
+                  type: DOUBLE
+              - column:
+                  name: quota_rata
+                  type: DOUBLE
+
+        - createTable:
+            tableName: pagamenti
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: atleta_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_pagamenti_atleta
+                    references: atleti(id)
+              # Nullo per la tessera associativa, che non e legata a un corso
+              - column:
+                  name: corso_id
+                  type: BIGINT
+                  constraints:
+                    foreignKeyName: fk_pagamenti_corso
+                    references: corsi(id)
+                    deleteCascade: true
+              - column:
+                  name: tipo
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: stagione
+                  type: VARCHAR(9)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: importo
+                  type: DOUBLE
+              - column:
+                  name: data_scadenza
+                  type: DATE
+              - column:
+                  name: data_pagamento
+                  type: DATE
+              - column:
+                  name: metodo
+                  type: VARCHAR(20)
+              - column:
+                  name: ricevuta_numero
+                  type: VARCHAR(50)
+              - column:
+                  name: note
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  defaultValueComputed: CURRENT_TIMESTAMP
+
+        - createIndex:
+            tableName: pagamenti
+            indexName: idx_pagamenti_atleta_stagione
+            columns:
+              - column:
+                  name: atleta_id
+              - column:
+                  name: stagione
+
+        - createIndex:
+            tableName: pagamenti
+            indexName: idx_pagamenti_corso_stagione
+            columns:
+              - column:
+                  name: corso_id
+              - column:
+                  name: stagione

@@ -18,10 +18,15 @@ public class AtletaController {
 
     private final AtletaService atletaService;
 
+    /**
+     * @param q filtro su nominativo e codice fiscale: la lista arriva gia
+     *          ridotta, cosi il client non filtra in memoria
+     */
     @GetMapping
     public ResponseEntity<List<AtletaResponse>> getAll(
-            @RequestParam(required = false) Boolean attivo) {
-        return ResponseEntity.ok(atletaService.findAll(attivo));
+            @RequestParam(required = false) Boolean attivo,
+            @RequestParam(required = false) String q) {
+        return ResponseEntity.ok(atletaService.findAll(attivo, q));
     }
 
     @GetMapping("/{id}")

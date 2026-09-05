@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: "007"
+      author: nippon-manager
+      changes:
+        - dropColumn:
+            tableName: pagamenti
+            columns:
+              - column:
+                  name: data_scadenza
+              - column:
+                  name: ricevuta_numero
+
+        - dropColumn:
+            tableName: corsi
+            columns:
+              - column:
+                  name: istruttore
+              - column:
+                  name: livello
