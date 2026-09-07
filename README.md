@@ -96,6 +96,7 @@ src/main/java/com/projectstarter/starter/
 | PUT | `/api/athletes/{id}/activate` | Autenticato | Riattiva atleta |
 | GET | `/api/athletes/search?q=` | Autenticato | Ricerca per nome/cognome |
 | GET | `/api/athletes/expiring-certificates?days=30` | Autenticato | Certificati in scadenza |
+| POST | `/api/athletes/import` | Autenticato | Import tesserati da Excel FIJLKAM (multipart `file`, `?dryRun=true` per l'anteprima) |
 
 ### Riepilogo e dati di riferimento
 
@@ -114,7 +115,7 @@ src/main/java/com/projectstarter/starter/
 | POST | `/api/courses/{id}/lessons/generate` | Genera le lezioni di un mese (`{ "mese": "2026-09" }`) |
 | GET | `/api/courses/{id}/payments` | Prospetto pagamenti (`?stagione=2026/2027`): colonne, celle e riepilogo |
 | GET | `/api/payments/seasons` | `{ stagioni, corrente }` |
-| GET | `/api/stats/attendance` | Presenze (`?periodo=STAGIONE\|MESE_CORRENTE\|ULTIMI_30\|ULTIMI_90\|PERSONALIZZATO`, `?q=`, `?ordine=`) |
+| GET | `/api/stats/attendance` | Presenze (`?periodo=STAGIONE\|MESE_CORRENTE\|ULTIMI_30\|ULTIMI_90\|PERSONALIZZATO`, `?giorno=1..7`, `?q=`, `?ordine=`) |
 | GET | `/api/stats/revenue` | Incassi della stagione (`?corsoId=`, `?stagione=`) |
 
 ### Divisione delle responsabilita

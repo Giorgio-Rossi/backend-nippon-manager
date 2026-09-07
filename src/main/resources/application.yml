@@ -27,6 +27,13 @@ spring:
       ddl-auto: none
     show-sql: false
 
+  servlet:
+    multipart:
+      # Import dei tesserati: l'export del gestionale e un .xlsx di poche decine di KB,
+      # il limite di default da 1MB e comunque stretto se la societa cresce.
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher

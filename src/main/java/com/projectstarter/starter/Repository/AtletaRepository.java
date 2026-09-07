@@ -7,12 +7,20 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
 public interface AtletaRepository extends JpaRepository<Atleta, Long> {
 
     long countByAttivoTrue();
+
+    /**
+     * Gli atleti gia in archivio tra i codici fiscali indicati. L'import Excel
+     * risolve tutte le corrispondenze con una sola query invece di interrogare
+     * il database una volta per riga del foglio.
+     */
+    List<Atleta> findByCodiceFiscaleIn(Collection<String> codiciFiscali);
 
     /**
      * Elenco filtrato e ordinato: il filtro sta nella query e non nel client,

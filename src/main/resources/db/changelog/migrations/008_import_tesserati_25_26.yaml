@@ -2,6 +2,11 @@ databaseChangeLog:
   - changeSet:
       id: "008"
       author: nippon-manager
+      # Dati, non struttura: la prima valorizzazione dell'archivio. Il contesto
+      # "dati" permette ai test di caricare lo schema senza le 50 anagrafiche,
+      # che altrimenti si sommerebbero ai dati di fixture falsandone le attese.
+      # Senza contesti attivi Liquibase esegue tutto, quindi in esercizio nulla cambia.
+      contextFilter: dati
       comment: Anagrafiche atleti dai tesserati FIJLKAM della stagione 2025/26.
       changes:
         - sqlFile:

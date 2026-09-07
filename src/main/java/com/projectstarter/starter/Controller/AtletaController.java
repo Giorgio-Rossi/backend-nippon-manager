@@ -2,12 +2,16 @@ package com.projectstarter.starter.Controller;
 
 import com.projectstarter.starter.Dto.Request.AtletaRequest;
 import com.projectstarter.starter.Dto.Response.AtletaResponse;
+import com.projectstarter.starter.Dto.Response.ImportAtletiResponse;
 import com.projectstarter.starter.Service.AtletaService;
+import com.projectstarter.starter.Service.ImportAtletiService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,6 +21,7 @@ import java.util.List;
 public class AtletaController {
 
     private final AtletaService atletaService;
+    private final ImportAtletiService importAtletiService;
 
     /**
      * @param q filtro su nominativo e codice fiscale: la lista arriva gia
@@ -55,6 +60,23 @@ public class AtletaController {
             @PathVariable Long id,
             @Valid @RequestBody AtletaRequest request) {
         return ResponseEntity.ok(atletaService.update(id, request));
+    }
+
+    /**
+     * Import degli atleti dall'export tesserati del gestionale FIJLKAM.
+     * L'abbinamento e sul codice fiscale: chi c'e gia viene aggiornato, chi
+     * manca viene inserito, cosi il file si puo ricaricare piu volte durante
+     * l'anno senza duplicare nessuno.
+     *
+     * @param dryRun con true restituisce solo l'anteprima dell'esito, senza
+     *               scrivere nulla: il client mostra il riepilogo e fa
+     *               confermare prima dell'import vero
+     */
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ImportAtletiResponse> importa(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(defaultValue = "false") boolean dryRun) {
+        return ResponseEntity.ok(importAtletiService.importa(file, dryRun));
     }
 
     @DeleteMapping("/{id}")

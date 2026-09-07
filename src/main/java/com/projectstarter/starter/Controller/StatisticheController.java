@@ -24,8 +24,9 @@ public class StatisticheController {
     /**
      * Statistiche presenze. Il periodo si indica con {@code periodo} (un preset
      * come {@code ULTIMI_30}) oppure con {@code from}/{@code to}; senza nessuno
-     * dei due copre l'intera stagione. {@code q} e {@code ordine} filtrano e
-     * ordinano la classifica atleti lato server.
+     * dei due copre l'intera stagione. Con {@code giorno} (1 = lunedi ... 7 =
+     * domenica) restano le sole lezioni di quel giorno della settimana.
+     * {@code q} e {@code ordine} filtrano e ordinano la classifica atleti lato server.
      */
     @GetMapping("/attendance")
     public ResponseEntity<StatistichePresenzeResponse> presenze(@ModelAttribute FiltroPresenzeRequest filtro) {

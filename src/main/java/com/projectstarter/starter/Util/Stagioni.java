@@ -24,6 +24,12 @@ public final class Stagioni {
         return anno + "/" + (anno + 1);
     }
 
+    /** Forma compatta usata nelle note di tesseramento: "2025/2026" -> "25/26". */
+    public static String breve(String stagione) {
+        int anno = annoIniziale(stagione);
+        return "%02d/%02d".formatted(anno % 100, (anno + 1) % 100);
+    }
+
     /** Le stagioni selezionabili: dalla corrente piu {@code precedenti} indietro e una avanti. */
     public static List<String> intorno(int precedenti) {
         int annoCorrente = Integer.parseInt(corrente().substring(0, 4));

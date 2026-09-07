@@ -26,6 +26,10 @@ public class StatistichePresenzeResponse {
     private String ambito;
     /** Stagione di riferimento del periodo. */
     private String stagione;
+    /** Giorno ISO su cui e filtrato il calcolo; nullo quando li copre tutti. */
+    private Integer giorno;
+    /** "Lunedi", oppure "Tutti i giorni" quando non c'e filtro. */
+    private String giornoLabel;
 
     /** Lezioni svolte, cioe non annullate, nel periodo. */
     private long lezioniSvolte;
@@ -41,6 +45,11 @@ public class StatistichePresenzeResponse {
 
     private List<PuntoMensile> andamentoMensile;
     private List<RigaCorso> perCorso;
+    /**
+     * Un elemento per ogni giorno con almeno una lezione nel periodo, in ordine
+     * da lunedi a domenica. Con il filtro su un giorno resta la sola riga scelta.
+     */
+    private List<RigaGiorno> perGiorno;
 
     /** Classifica gia filtrata e ordinata secondo {@link #getOrdine()}. */
     private List<RigaAtleta> perAtleta;
@@ -65,6 +74,21 @@ public class StatistichePresenzeResponse {
         private Long corsoId;
         private String corsoNome;
         private long iscrittiAttivi;
+        private long lezioniSvolte;
+        private long presenti;
+        private long assenti;
+        private Double tassoPresenza;
+        private Double mediaPresentiPerLezione;
+    }
+
+    @Data
+    public static class RigaGiorno {
+        /** ISO-8601: 1 = lunedi ... 7 = domenica. */
+        private Integer giorno;
+        /** "Lunedi" */
+        private String giornoLabel;
+        /** "Lun": etichetta compatta di legende e fette. */
+        private String giornoBreve;
         private long lezioniSvolte;
         private long presenti;
         private long assenti;

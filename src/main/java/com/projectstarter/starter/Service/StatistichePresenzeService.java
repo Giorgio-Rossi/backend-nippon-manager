@@ -31,6 +31,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +53,8 @@ public class StatistichePresenzeService {
     private static final String TUTTI_I_CORSI = "Tutti i corsi";
     /** Oltre questo numero di mesi l'andamento mensile diventa illeggibile. */
     private static final int MAX_MESI = 36;
+    /** Etichetta dell'ambito temporale quando il filtro sul giorno non c'e. */
+    private static final String TUTTI_I_GIORNI = "Tutti i giorni";
 
     /**
      * @param corsoId  se nullo aggrega tutti i corsi
@@ -82,15 +85,22 @@ public class StatistichePresenzeService {
         LocalDate inizio = intervallo.from();
         LocalDate fine = intervallo.to();
         Statistiche.Ordine ordine = Statistiche.Ordine.da(filtro.getOrdine());
+        Integer giorno = Giorni.valida(filtro.getGiorno());
 
-        List<Lezione> lezioni = corsoId == null
+        // Il giorno si filtra qui e non in query: la data e gia in memoria e le
+        // due repository resterebbero altrimenti con una variante ciascuna in piu
+        List<Lezione> lezioni = (corsoId == null
                 ? lezioneRepository.findPerStatistiche(inizio, fine)
-                : lezioneRepository.findPerStatistiche(inizio, fine, corsoId);
+                : lezioneRepository.findPerStatistiche(inizio, fine, corsoId))
+                .stream()
+                .filter(l -> nelGiorno(l.getData(), giorno))
+                .toList();
         List<Presenza> presenze = (corsoId == null
                 ? presenzaRepository.findPerStatistiche(inizio, fine)
                 : presenzaRepository.findPerStatistiche(inizio, fine, corsoId))
                 .stream()
                 .filter(p -> !Boolean.TRUE.equals(p.getLezione().getAnnullata()))
+                .filter(p -> nelGiorno(p.getLezione().getData(), giorno))
                 .toList();
 
         List<Lezione> svolte = lezioni.stream()
@@ -110,6 +120,8 @@ public class StatistichePresenzeService {
         }
         response.setAmbito(corso == null ? TUTTI_I_CORSI : corso.getNome());
         response.setStagione(stagione);
+        response.setGiorno(giorno);
+        response.setGiornoLabel(giorno == null ? TUTTI_I_GIORNI : Giorni.nome(giorno));
         response.setLezioniSvolte(svolte.size());
         response.setLezioniAnnullate(lezioni.size() - svolte.size());
         response.setRegistrazioni(totale.registrazioni());
@@ -123,6 +135,7 @@ public class StatistichePresenzeService {
 
         response.setAndamentoMensile(andamentoMensile(inizio, fine, svolte, presenze));
         response.setPerCorso(perCorso(svolte, presenze));
+        response.setPerGiorno(perGiorno(svolte, presenze));
 
         List<StatistichePresenzeResponse.RigaAtleta> classifica = perAtleta(presenze);
         response.setAtletiInClassifica(classifica.size());
@@ -227,6 +240,46 @@ public class StatistichePresenzeService {
         return riga;
     }
 
+    // ---------- Dettaglio per giorno della settimana ----------
+
+    /**
+     * Un giorno senza lezioni non compare: le fette di una torta vuota sarebbero
+     * rumore, e il grafico serve a confrontare i giorni in cui si e fatta lezione.
+     */
+    private List<StatistichePresenzeResponse.RigaGiorno> perGiorno(
+            List<Lezione> svolte, List<Presenza> presenze) {
+
+        Map<Integer, ContatorePresenze> perGiorno = new TreeMap<>();
+        for (Lezione lezione : svolte) {
+            contatoreGiorno(perGiorno, lezione.getData()).aggiungiLezione();
+        }
+        for (Presenza presenza : presenze) {
+            contatoreGiorno(perGiorno, presenza.getLezione().getData()).aggiungi(presenza);
+        }
+
+        List<StatistichePresenzeResponse.RigaGiorno> righe = new ArrayList<>();
+        for (Map.Entry<Integer, ContatorePresenze> entry : perGiorno.entrySet()) {
+            ContatorePresenze contatore = entry.getValue();
+            StatistichePresenzeResponse.RigaGiorno riga = new StatistichePresenzeResponse.RigaGiorno();
+            riga.setGiorno(entry.getKey());
+            riga.setGiornoLabel(Giorni.nome(entry.getKey()));
+            riga.setGiornoBreve(Giorni.breve(entry.getKey()));
+            riga.setLezioniSvolte(contatore.lezioni);
+            riga.setPresenti(contatore.presenti);
+            riga.setAssenti(contatore.assenti);
+            riga.setTassoPresenza(Aggregazioni.percentuale(contatore.presenti, contatore.registrazioni()));
+            riga.setMediaPresentiPerLezione(contatore.lezioni == 0
+                    ? null
+                    : Aggregazioni.arrotonda((double) contatore.presenti / contatore.lezioni));
+            righe.add(riga);
+        }
+        return righe;
+    }
+
+    private ContatorePresenze contatoreGiorno(Map<Integer, ContatorePresenze> perGiorno, LocalDate data) {
+        return perGiorno.computeIfAbsent(data.getDayOfWeek().getValue(), g -> new ContatorePresenze());
+    }
+
     // ---------- Classifica atleti ----------
 
     private List<StatistichePresenzeResponse.RigaAtleta> perAtleta(List<Presenza> presenze) {
@@ -263,6 +316,11 @@ public class StatistichePresenzeService {
     }
 
     // ---------- Helpers ----------
+
+    /** Senza filtro passa qualunque data: il {@code null} vale "tutti i giorni". */
+    private boolean nelGiorno(LocalDate data, Integer giornoIso) {
+        return giornoIso == null || data.getDayOfWeek().getValue() == giornoIso;
+    }
 
     private Corso getCorso(Long id) {
         return corsoRepository.findById(id)

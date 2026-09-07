@@ -23,7 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest
 @Transactional
-@TestPropertySource(properties = "spring.datasource.url=jdbc:h2:mem:ricerche;DB_CLOSE_DELAY=-1")
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:ricerche;DB_CLOSE_DELAY=-1",
+        // Solo lo schema: attivando un contesto diverso da "dati" la migration 008
+        // non semina i tesserati 25/26, che altrimenti si mescolerebbero alle fixture.
+        "spring.liquibase.contexts=struttura"
+})
 class RicercheRepositoryTest {
 
     @Autowired private AtletaRepository atletaRepository;

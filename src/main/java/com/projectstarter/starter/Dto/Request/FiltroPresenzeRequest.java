@@ -27,6 +27,12 @@ public class FiltroPresenzeRequest {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate to;
 
+    /**
+     * Giorno della settimana in ISO-8601 (1 = lunedi ... 7 = domenica): restringe
+     * i conteggi alle sole lezioni tenute in quel giorno. Nullo per tutti i giorni.
+     */
+    private Integer giorno;
+
     /** Filtro sul nominativo, applicato alla sola classifica atleti. */
     private String q;
 

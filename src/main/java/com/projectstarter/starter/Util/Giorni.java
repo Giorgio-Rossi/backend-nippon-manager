@@ -79,6 +79,22 @@ public final class Giorni {
         return mese == null ? VUOTO : MESI_BREVI[mese.getMonthValue() - 1] + " " + (mese.getYear() % 100);
     }
 
+    /**
+     * Il giorno ISO cosi come arriva dai filtri, verificato.
+     *
+     * @return nullo quando non e indicato: significa "tutti i giorni"
+     * @throws IllegalArgumentException se il valore e fuori dall'intervallo 1-7
+     */
+    public static Integer valida(Integer giornoIso) {
+        if (giornoIso == null) {
+            return null;
+        }
+        if (!valido(giornoIso)) {
+            throw new IllegalArgumentException("Giorno della settimana non valido: " + giornoIso);
+        }
+        return giornoIso;
+    }
+
     public static String[] nomi() {
         return NOMI.clone();
     }
